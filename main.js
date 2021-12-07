@@ -1,5 +1,8 @@
 let akkuratFont, thresholdShader, graphicsLayer;
 let bodyText = '\nQ: Hello.\nA: ';
+let newBodyText = bodyText;
+let osc,
+  oscPlaying = false;
 
 const counts = {};
 let lastWord = '';
@@ -64,6 +67,12 @@ const gpt3Request = async (prompt = basePrompt, engine = 'davinci') => {
   return resp.json();
 };
 
+const debug_startOscWithWords = (s) => {
+  osc.start();
+  oscPlaying = true;
+  newBodyText += s;
+};
+
 function preload() {
   akkuratFont = loadFont('assets/Akkurat-Mono.otf');
   thresholdShader = loadShader(
@@ -75,17 +84,45 @@ function preload() {
 function setup() {
   createCanvas(640, 480, WEBGL);
   graphicsLayer = createGraphics(640, 480, WEBGL);
+  osc = new p5.TriOsc();
+  osc.amp(0.5);
 }
 
 function keyTyped() {
+  if (newBodyText !== bodyText) {
+    // rendering out a bulk text update, so no typing
+    return;
+  }
+
   if (key === ' ') {
-    bodyText += key;
+    //bodyText += key;
+    newBodyText += key;
+    osc.start();
+    oscPlaying = true;
   } else if (key === 'e') {
-    bodyText += 'e';
+    //bodyText += 'e';
+    newBodyText += 'e';
+    osc.start();
+    oscPlaying = true;
   } else if (key.length === 1) {
-    bodyText += key;
+    //bodyText += key;
+    newBodyText += key;
+    osc.start();
+    oscPlaying = true;
   } else if (key === 'Enter') {
-    bodyText += '\n';
+    //bodyText += '\n';
+    newBodyText += '\n';
+    osc.start();
+    oscPlaying = true;
+  }
+  //newBodyText = bodyText;
+
+  if (Math.random() < 0.01) {
+    gpt3Request(bodyText).then((resp) => {
+      newBodyText += resp.choices[0].text;
+      osc.start();
+      oscPlaying = true;
+    });
   }
 }
 
@@ -97,6 +134,36 @@ function draw() {
   thresholdShader.setUniform('uScale', [mx, my]);
 
   graphicsLayer.background(0);
+
+  if (bodyText !== newBodyText) {
+    if (newBodyText[bodyText.length]) {
+      console.log(
+        newBodyText[bodyText.length],
+        map(
+          newBodyText[bodyText.length].charCodeAt(0),
+          ' '.charCodeAt(0),
+          '~'.charCodeAt(0),
+          // roughly the same range the sound of sorting uses
+          120,
+          1200,
+        ),
+      );
+      osc.freq(
+        map(
+          newBodyText[bodyText.length].charCodeAt(0),
+          ' '.charCodeAt(0),
+          '~'.charCodeAt(0),
+          // roughly the same range the sound of sorting uses
+          120,
+          1200,
+        ),
+      );
+      bodyText += newBodyText[bodyText.length];
+    }
+  } else if (oscPlaying) {
+    osc.stop();
+    oscPlaying = false;
+  }
 
   let renderText = bodyText;
   graphicsLayer.textFont(akkuratFont);
