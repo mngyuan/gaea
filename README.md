@@ -22,17 +22,3 @@ Brooklyn, NY 11206
 Kevin Lee is a Chinese-American, multi-disciplinary creative who works between software engineering and videography. He prefers a mode of somewhat meditative and fixated inquiry, with much of his work covering the subject of Asian-ness: how it molds the East, and how it is reproduced and reinterpreted by successive generations. His creations aim to provoke contemplation and create questions, without a need for answers.
 
 ![Picture of the artist. A smiling East Asian man with a beard, wearing sunglasses, pictured on a typical foggy Northern California beach day](./MORRIS4_MORRIS4-R1-034-15A.jpg)
-
-## TIMELINE
-
-12/3 basic conversation with gpt3 is achieved  
-12/2 CRT ARRIVAL WINDOW OPENS  
-12/6 CRT ARRIVAL WINDOW CLOSES  
-12/8 laptop output to CRT is achieved  
-12/9 desired visual effects are achieved
-
-### ACTUAL TIMINGS
-
-12/2 CRT ARRIVES  
-12/5 laptop output to CRT is achieved  
-12/6 basic conversation with gpt3 is achieved
