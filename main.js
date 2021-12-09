@@ -1,3 +1,6 @@
+const OUTPUT_WIDTH = 712,
+  OUTPUT_HEIGHT = 500;
+
 let akkuratFont, thresholdShader, graphicsLayer;
 let bodyText = '\nQ: Hello.\nA: ';
 let newBodyText = bodyText;
@@ -82,8 +85,8 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(640, 480, WEBGL);
-  graphicsLayer = createGraphics(640, 480, WEBGL);
+  createCanvas(OUTPUT_WIDTH, OUTPUT_HEIGHT, WEBGL);
+  graphicsLayer = createGraphics(OUTPUT_WIDTH, OUTPUT_HEIGHT, WEBGL);
   osc = new p5.TriOsc();
   osc.amp(0.5);
 }
@@ -180,13 +183,25 @@ function draw() {
     predictionText += ' ' + predictNextWord(lastWord);
   }
   graphicsLayer.fill(50);
-  graphicsLayer.text(predictionText, -320, -240, 640, 480);
+  graphicsLayer.text(
+    predictionText,
+    -(OUTPUT_WIDTH / 2),
+    -(OUTPUT_HEIGHT / 2),
+    OUTPUT_WIDTH,
+    OUTPUT_HEIGHT,
+  );
 
   graphicsLayer.fill(255);
   if (Math.floor(millis() / 800) % 2 === 0) {
     renderText += '�';
   }
-  graphicsLayer.text(renderText, -320, -240, 640, 480);
+  graphicsLayer.text(
+    renderText,
+    -(OUTPUT_WIDTH / 2),
+    -(OUTPUT_HEIGHT / 2),
+    OUTPUT_WIDTH,
+    OUTPUT_HEIGHT,
+  );
 
   // rect gives us some geometry on the screen
   rect(0, 0, width, height);
