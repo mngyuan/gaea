@@ -22,3 +22,7 @@ Brooklyn, NY 11206
 Kevin Lee is a Chinese-American, multi-disciplinary creative who works between software engineering and videography. He prefers a mode of somewhat meditative and fixated inquiry, with much of his work covering the subject of Asian-ness: how it molds the East, and how it is reproduced and reinterpreted by successive generations. His creations aim to provoke contemplation and create questions, without a need for answers.
 
 ![Picture of the artist. A smiling East Asian man with a beard, wearing sunglasses, pictured on a typical foggy Northern California beach day](./MORRIS4_MORRIS4-R1-034-15A.jpg)
+
+# A note from me
+
+If you're reading this, you're one of a handful of people who actually benefits from me keeping my many repos public. I appreciate you and I'd love to hear from you even in a small way - how you found this, if it helped, anything. [me@mngyuan.com](mailto:me@mngyuan.com)
