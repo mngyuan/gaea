@@ -1,7 +1,10 @@
 const OUTPUT_WIDTH = 712,
   OUTPUT_HEIGHT = 500;
+// 712x500 makes a 58x16 display for text at textSize 24 with akkurat mono
+const GPT3_ON = false;
 
 let akkuratFont, thresholdShader, graphicsLayer;
+let log = '';
 let bodyText = '\nQ: Hello.\nA: ';
 let newBodyText = bodyText;
 let osc,
@@ -120,7 +123,7 @@ function keyTyped() {
   }
   //newBodyText = bodyText;
 
-  if (Math.random() < 0.01) {
+  if (Math.random() < 0.01 && GPT3_ON) {
     gpt3Request(bodyText).then((resp) => {
       newBodyText += resp.choices[0].text;
       osc.start();
@@ -140,17 +143,17 @@ function draw() {
 
   if (bodyText !== newBodyText) {
     if (newBodyText[bodyText.length]) {
-      console.log(
-        newBodyText[bodyText.length],
-        map(
-          newBodyText[bodyText.length].charCodeAt(0),
-          ' '.charCodeAt(0),
-          '~'.charCodeAt(0),
-          // roughly the same range the sound of sorting uses
-          120,
-          1200,
-        ),
-      );
+      //console.log(
+      //newBodyText[bodyText.length],
+      //map(
+      //newBodyText[bodyText.length].charCodeAt(0),
+      //' '.charCodeAt(0),
+      //'~'.charCodeAt(0),
+      //// roughly the same range the sound of sorting uses
+      //120,
+      //1200,
+      //),
+      //);
       osc.freq(
         map(
           newBodyText[bodyText.length].charCodeAt(0),
@@ -161,7 +164,22 @@ function draw() {
           1200,
         ),
       );
+      // this should be the only place where body text is directly updated
       bodyText += newBodyText[bodyText.length];
+      const bodyTextNewlines = (bodyText.match(/\n/g) || []).length;
+      console.log(
+        bodyText.length,
+        bodyTextNewlines,
+        bodyText.length - bodyTextNewlines + bodyTextNewlines * 58,
+      );
+      if (
+        bodyText.length - bodyTextNewlines + bodyTextNewlines * 58 >=
+        58 * 16
+      ) {
+        log += bodyText;
+        newBodyText = '\n' + newBodyText.slice(bodyText.length);
+        bodyText = '\n';
+      }
     }
   } else if (oscPlaying) {
     osc.stop();
