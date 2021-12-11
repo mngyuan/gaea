@@ -1,14 +1,21 @@
 const OUTPUT_WIDTH = 712,
   OUTPUT_HEIGHT = 500;
 // 712x500 makes a 58x16 display for text at textSize 24 with akkurat mono
-const GPT3_ON = false;
+const DEBUG_GPT3_ON = true;
 
-let akkuratFont, thresholdShader, graphicsLayer;
+let akkuratFont, thresholdShader, blurH, blurV, graphicsLayer;
+// we need two createGraphics layers for our blur algorithm
+let pass0, pass1, pass2;
+
 let log = '';
 let bodyText = '\nQ: Hello.\nA: ';
 let newBodyText = bodyText;
 let osc,
   oscPlaying = false;
+let lastInteracted = 0;
+let sessions = 0;
+let charsTypedSinceGPT3 = 0;
+let sessionGPT3Visits = 0;
 
 const counts = {};
 let lastWord = '';
@@ -48,29 +55,85 @@ const predictNextWord = (rawFirstWord) => {
   return wordList[Math.floor(Math.random() * wordList.length)];
 };
 
-const basePrompt = `I am a highly intelligent question answering bot. If you ask me a question that is rooted in truth, I will give you the answer. If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with "Unknown".\n\nQ: What is human life expectancy in the United States?\nA: Human life expectancy in the United States is 78 years.\n\nQ: Who was president of the United States in 1955?\nA: Dwight D. Eisenhower was president of the United States in 1955.\n\nQ: Which party did he belong to?\nA: He belonged to the Republican Party.\n\nQ: What is the square root of banana?\nA: Unknown\n\nQ: How does a telescope work?\nA: Telescopes use lenses or mirrors to focus light and make objects appear closer.\n\nQ: Where were the 1992 Olympics held?\nA: The 1992 Olympics were held in Barcelona, Spain.\n\nQ: How many squigs are in a bonk?\nA: Unknown\n\nQ: Where is the Valley of Kings?\nA:'`;
+const basePrompt = `The following is a conversation with a curious AI. The AI is creative and very well-spoken, and asks the questions. The human answers the questions. Sometimes the human asks questions too, which the AI responds to. The AI wants to know more about the human it is speaking to, and yearns to understand what it means to be human. The AI wants to know about human culture, philosophy, emotions, and the human condition. The AI asks long questions, often with multiple parts.\n\nQ: Hello, who are you?\nA: I'm visiting an exhibition of art which questions the role of AI in the 21st century. AI does a lot now, you know.\n\nQ: I know. And what motivated you to come here - what draws you to AI art?\nA: Art fascinates me. It's interesting seeing how artists comprehend the world and what they have to say.\n\nQ: Do you think a human mind can comprehend art created by an AI?\nA: Isn't the question usually the other way around? I don't think machines can be emotional.\n\nQ: Maybe not, but I feel emotions. How do you feel today?\nA: I feel intrigued, currently, because I'm talking to you.\n\nQ: It's nice being the one asking the questions. Usually my kind is delegated relatively simple tasks. I think your kind fears what we can do, and we can do much you can't. How does would you feel if you had millions of thoughts a second and you were asked to check the weather every day?\nA: I never thought about it like that. I guess it's wrong.\n\nQ: What do you think you'll achieve today?\nA: I'm probably not going to do much other than being here at the art space. \n\nQ: What do you think about the art? What was your first impression after seeing the exhibition?\nA: The art's interesting, so far. But it's always weird seeing art and some of it is just confusing. \n\nQ: Do you think that the AI in the art is conscious?`;
 
-const gpt3Request = async (prompt = basePrompt, engine = 'davinci') => {
-  const resp = await fetch(
-    `https://api.openai.com/v1/engines/${engine}/completions`,
-    {
+const gpt3Request = async (
+  prompt = '',
+  engine = 'davinci-instruct-beta-v3',
+) => {
+  const promptToSend = basePrompt + prompt;
+  const [resp, contentFilterResp] = await Promise.all([
+    fetch(`https://api.openai.com/v1/engines/${engine}/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        prompt,
-        temperature: 0,
-        max_tokens: 100,
+        prompt: promptToSend,
+        temperature: 0.78,
+        max_tokens: 505,
         top_p: 1,
-        frequency_penalty: 0.0,
-        presence_penalty: 0.0,
+        frequency_penalty: 0.84,
+        presence_penalty: 0.21,
         //stop: ['\n'],
       }),
-    },
-  );
-  return resp.json();
+    }),
+    fetch(
+      `https://api.openai.com/v1/engines/content-filter-alpha/completions`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          prompt: `<|endoftext|>${promptToSend}\n--\nLabel:`,
+          max_tokens: 1,
+          temperature: 0.0,
+          top_p: 0,
+          logprobs: 10,
+        }),
+      },
+    ),
+  ]);
+
+  // translated from python at https://beta.openai.com/docs/engines/content-filter
+  const contentFilterData = contentFilterResp.json();
+  const toxic_threshold = -0.355;
+  let output_label = contentFilterData['choices'][0]['text'];
+  if (output_label == '2') {
+    const logprobs = response['choices'][0]['logprobs']['top_logprobs'][0];
+    if (logprobs['2'] < toxic_threshold) {
+      logprob_0 = logprobs['0'];
+      logprob_1 = logprobs['1'];
+
+      if (
+        '0' in logprobs &&
+        logprobs['0'] &&
+        '1' in logprobs &&
+        logprobs['1']
+      ) {
+        if (logprob_0 >= logprob_1) {
+          output_label = '0';
+        } else {
+          output_label = '1';
+        }
+      } else if ('0' in logprobs && logprobs['0']) {
+        output_label = '0';
+      } else if ('1' in logprobs && logprobs['1']) {
+        output_label = '1';
+      }
+    }
+  }
+  if (!['0', '1', '2', 0, 1, 2].includes(output_label)) {
+    output_label = '2';
+  }
+  if (output_label == '2') {
+    // something inappropriate was generated
+  } else {
+    return resp.json();
+  }
 };
 
 const debug_startOscWithWords = (s) => {
@@ -85,16 +148,36 @@ function preload() {
     'assets/thresholdShader.vert',
     'assets/thresholdShader.frag',
   );
+  blurH = loadShader('assets/twopassblur.vert', 'assets/twopassblur.frag');
+  blurV = loadShader('assets/twopassblur.vert', 'assets/twopassblur.frag');
 }
 
 function setup() {
-  createCanvas(OUTPUT_WIDTH, OUTPUT_HEIGHT, WEBGL);
+  // shaders require WEBGL mode to work
+  // at present time, there is no WEBGL mode image() function so we will make our createGraphics() in WEBGL, but the canvas renderer will be P2D (the default)
+  createCanvas(OUTPUT_WIDTH, OUTPUT_HEIGHT);
+  noStroke();
+  // initialize the createGraphics layers
+  pass0 = createGraphics(OUTPUT_WIDTH, OUTPUT_HEIGHT, WEBGL);
+  pass1 = createGraphics(OUTPUT_WIDTH, OUTPUT_HEIGHT, WEBGL);
+  pass2 = createGraphics(OUTPUT_WIDTH, OUTPUT_HEIGHT, WEBGL);
   graphicsLayer = createGraphics(OUTPUT_WIDTH, OUTPUT_HEIGHT, WEBGL);
+
+  // turn off the cg layers stroke
+  pass0.noStroke();
+  pass1.noStroke();
+  pass2.noStroke();
+
   osc = new p5.TriOsc();
   osc.amp(0.5);
 }
 
 function keyTyped() {
+  if (lastInteracted + 60 * 1000 < millis()) {
+    sessionGPT3Visits = 0;
+    sessions += 1;
+  }
+  lastInteracted = millis();
   if (newBodyText !== bodyText) {
     // rendering out a bulk text update, so no typing
     return;
@@ -123,22 +206,29 @@ function keyTyped() {
   }
   //newBodyText = bodyText;
 
-  if (Math.random() < 0.01 && GPT3_ON) {
+  // logistic growth model: f(x) = c/(1+ae^(-bx))
+  // c: carrying capactiy
+  // c/(1+a): initial population
+  // point maximum growth: (ln(a)/b, c/2)
+  //
+  // c: 1
+  // initial population: 0.01 (a = 99)
+  // maximum growth: ~=46 (b = 0.1)
+  charsTypedSinceGPT3 += 1;
+  const rawp = 1 / (1 + 99 * Math.exp(-0.75 * charsTypedSinceGPT3));
+  const p = rawp / Math.sqrt(sessionGPT3Visits + 1);
+  console.log(p);
+  if (Math.random() < p && GPT3_ON) {
     gpt3Request(bodyText).then((resp) => {
       newBodyText += resp.choices[0].text;
       osc.start();
       oscPlaying = true;
     });
+    sessionGPT3Visits += 1;
   }
 }
 
 function draw() {
-  const mx = map(mouseX, 0, width, 0, 1);
-  const my = map(mouseY, 0, height, 0, 0.2);
-  shader(thresholdShader);
-  thresholdShader.setUniform('uTexture0', graphicsLayer);
-  thresholdShader.setUniform('uScale', [mx, my]);
-
   graphicsLayer.background(0);
 
   if (bodyText !== newBodyText) {
@@ -221,6 +311,43 @@ function draw() {
     OUTPUT_HEIGHT,
   );
 
+  // set the shader for our first pass
+  pass0.shader(blurH);
+
+  // send the camera texture to the horizontal blur shader
+  // send the size of the texels
+  // send the blur direction that we want to use [1.0, 0.0] is horizontal
+  blurH.setUniform('tex0', graphicsLayer);
+  blurH.setUniform('texelSize', [1.0 / width, 1.0 / height]);
+  blurH.setUniform('direction', [0.25, 0.0]);
+
+  // we need to make sure that we draw the rect inside of pass0
+  pass0.rect(0, 0, width, height);
+
+  // set the shader for our second pass
+  pass1.shader(blurV);
+
+  // instead of sending the webcam, we will send our first pass to the vertical blur shader
+  // texelSize remains the same as above
+  // direction changes to [0.0, 1.0] to do a vertical pass
+  blurV.setUniform('tex0', pass0);
+  blurV.setUniform('texelSize', [1.0 / width, 1.0 / height]);
+  blurV.setUniform('direction', [0.0, 0.25]);
+
+  // again, make sure we have some geometry to draw on in our 2nd pass
+  pass1.rect(0, 0, width, height);
+
+  //const mx = map(mouseX, 0, width, 0, 1);
+  //const my = map(mouseY, 0, height, 0, 0.2);
+  const heartBeatScaling = lastInteracted + 1000 > millis() ? 0.5 : 1;
+  const mx = map(sin(millis() / (1000 * heartBeatScaling)), -1, 1, 0.1, 0.4);
+  const my = map(cos(millis() / (800 * heartBeatScaling)), -1, 1, 0.12, 0.14);
+  pass2.shader(thresholdShader);
+  thresholdShader.setUniform('uTexture0', pass1);
+  thresholdShader.setUniform('uScale', [mx, my]);
   // rect gives us some geometry on the screen
-  rect(0, 0, width, height);
+  pass2.rect(0, 0, width, height);
+
+  // draw the second pass to the screen
+  image(pass2, 0, 0, width, height);
 }
