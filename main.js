@@ -3,6 +3,7 @@ const OUTPUT_WIDTH = 712,
 // 712x500 makes a 58x16 display for text at textSize 24 with akkurat mono
 const DEBUG_GPT3_ON = true;
 let DEBUG_INTERJECT_NOW = false;
+const DEBUG_INTERJECT_ENABLE = false;
 
 let akkuratFont, thresholdShader, blurH, blurV, graphicsLayer;
 // we need two createGraphics layers for our blur algorithm
@@ -195,6 +196,23 @@ const debug_startOscWithWords = (s) => {
   newBodyText += s;
 };
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function debug_startOscWithWordsSlow() {
+  await sleep(50);
+}
+
+const debug_interject = (s, multiplier = 1) => {
+  let interjection =
+    s || INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)];
+  fullscreenWordQueue = interjection
+    .split(' ')
+    .map((s) => Array(10 * multiplier).fill(s))
+    .flat();
+};
+
 function preload() {
   akkuratFont = loadFont('assets/Akkurat-Mono.otf');
   thresholdShader = loadShader(
@@ -283,7 +301,6 @@ function keyTyped() {
   charsTypedSinceGPT3 += 1;
   const rawp = c / (1 + a * Math.exp(-b * charsTypedSinceGPT3));
   const p = rawp / (sessionGPT3Visits + 1);
-  console.log(p);
   if (Math.random() < p && DEBUG_GPT3_ON) {
     gpt3Request(lastBodyText + bodyText).then((resp) => {
       newBodyText += injectStartText + resp.choices[0].text + injectRestartText;
@@ -294,7 +311,7 @@ function keyTyped() {
     charsTypedSinceGPT3 = 0;
   }
 
-  if (Math.random() < 0.01 || DEBUG_INTERJECT_NOW) {
+  if ((Math.random() < 0.01 && DEBUG_INTERJECT_ENABLE) || DEBUG_INTERJECT_NOW) {
     const interjection =
       INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)];
     fullscreenWordQueue = interjection
@@ -375,7 +392,6 @@ function draw() {
     }
     predictionText += ' ' + predictNextWord(lastWord);
   }
-  console.log(predictionText);
   graphicsLayer.fill(200);
   graphicsLayer.textAlign(LEFT);
   graphicsLayer.text(
