@@ -32,6 +32,10 @@ let charsTypedSinceGPT3 = 0;
 let sessionGPT3Visits = 0;
 let fullscreenWordQueue = [];
 
+let audioElem,
+  audioIsPlaying = false;
+let lastKey = null;
+
 const counts = {};
 let lastWord = '';
 wikipediaCorpus
@@ -219,6 +223,8 @@ function setup() {
 
   osc = new p5.TriOsc();
   osc.amp(0.5);
+
+  audioElem = createAudio('assets/cutspace - 008 143bpm G min.wav');
 }
 
 function keyTyped() {
@@ -253,7 +259,16 @@ function keyTyped() {
     newBodyText += '\n';
     osc.start();
     oscPlaying = true;
+    if (lastKey === 'Enter') {
+      gpt3Request(lastBodyText + bodyText).then((resp) => {
+        newBodyText +=
+          injectStartText + resp.choices[0].text + injectRestartText;
+        osc.start();
+        oscPlaying = true;
+      });
+    }
   }
+  lastKey = key;
   //newBodyText = bodyText;
 
   // logistic growth model: f(x) = c/(1+ae^(-bx))
@@ -291,6 +306,11 @@ function keyTyped() {
 }
 
 function draw() {
+  if (!audioIsPlaying) {
+    audioElem.loop();
+    audioIsPlaying = true;
+  }
+
   graphicsLayer.background(0);
 
   if (bodyText !== newBodyText) {
@@ -355,7 +375,8 @@ function draw() {
     }
     predictionText += ' ' + predictNextWord(lastWord);
   }
-  graphicsLayer.fill(50);
+  console.log(predictionText);
+  graphicsLayer.fill(200);
   graphicsLayer.textAlign(LEFT);
   graphicsLayer.text(
     predictionText,

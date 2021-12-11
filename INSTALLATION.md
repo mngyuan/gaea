@@ -4,6 +4,7 @@
 - put chromium in fullscreen (f11)
 - position mouse offscreen
 - turn off mouse
+- set up chrome site settings for autoplay
 
 # `~/disable_keys.sh`
 
