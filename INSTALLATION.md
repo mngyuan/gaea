@@ -4,7 +4,6 @@
 - put chromium in fullscreen (f11)
 - position mouse offscreen
 - turn off mouse
-- disable sleep
 
 # `~/disable_keys.sh`
 
@@ -16,3 +15,9 @@ xmodmap -e 'keycode 37=' 	# left ctrl
 xmodmap -e 'keycode 105='	# right ctrl
 xmodmap -e 'keycode 66=' 	# caps
 ```
+
+## long term
+
+- disable sleep
+- host on cloud
+- set up session saving to local storage

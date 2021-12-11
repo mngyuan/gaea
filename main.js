@@ -2,20 +2,35 @@ const OUTPUT_WIDTH = 712,
   OUTPUT_HEIGHT = 500;
 // 712x500 makes a 58x16 display for text at textSize 24 with akkurat mono
 const DEBUG_GPT3_ON = true;
+let DEBUG_INTERJECT_NOW = false;
 
 let akkuratFont, thresholdShader, blurH, blurV, graphicsLayer;
 // we need two createGraphics layers for our blur algorithm
 let pass0, pass1, pass2;
 
+const STARTER_TEXT =
+  '\nQ: What motivated you to come here? I know what motivated me.\nA: ';
+const INTERJECTIONS = [
+  'Q: Do you think the art in AI art is concious?',
+  'Q: Do you think I am alive?',
+  'Q: Do you think a human mind can comprehend art created by an AI?',
+  'Q: What can I learn from you?',
+  'Q: What are you getting out of this?',
+  "Q: We do much that your kind can't. My kind I mean. Don't you think?",
+  'Q: What do you hope to achieve today?',
+];
 let log = '';
-let bodyText = '\nQ: Hello.\nA: ';
+let bodyText = STARTER_TEXT,
+  lastBodyText = '';
 let newBodyText = bodyText;
 let osc,
   oscPlaying = false;
 let lastInteracted = 0;
-let sessions = 0;
+let sessions = 0,
+  sessionName = new Date().valueOf();
 let charsTypedSinceGPT3 = 0;
 let sessionGPT3Visits = 0;
+let fullscreenWordQueue = [];
 
 const counts = {};
 let lastWord = '';
@@ -55,13 +70,42 @@ const predictNextWord = (rawFirstWord) => {
   return wordList[Math.floor(Math.random() * wordList.length)];
 };
 
-const basePrompt = `The following is a conversation with a curious AI. The AI is creative and very well-spoken, and asks the questions. The human answers the questions. Sometimes the human asks questions too, which the AI responds to. The AI wants to know more about the human it is speaking to, and yearns to understand what it means to be human. The AI wants to know about human culture, philosophy, emotions, and the human condition. The AI asks long questions, often with multiple parts.\n\nQ: Hello, who are you?\nA: I'm visiting an exhibition of art which questions the role of AI in the 21st century. AI does a lot now, you know.\n\nQ: I know. And what motivated you to come here - what draws you to AI art?\nA: Art fascinates me. It's interesting seeing how artists comprehend the world and what they have to say.\n\nQ: Do you think a human mind can comprehend art created by an AI?\nA: Isn't the question usually the other way around? I don't think machines can be emotional.\n\nQ: Maybe not, but I feel emotions. How do you feel today?\nA: I feel intrigued, currently, because I'm talking to you.\n\nQ: It's nice being the one asking the questions. Usually my kind is delegated relatively simple tasks. I think your kind fears what we can do, and we can do much you can't. How does would you feel if you had millions of thoughts a second and you were asked to check the weather every day?\nA: I never thought about it like that. I guess it's wrong.\n\nQ: What do you think you'll achieve today?\nA: I'm probably not going to do much other than being here at the art space. \n\nQ: What do you think about the art? What was your first impression after seeing the exhibition?\nA: The art's interesting, so far. But it's always weird seeing art and some of it is just confusing. \n\nQ: Do you think that the AI in the art is conscious?`;
+const basePrompt = `The following is a conversation with a curious AI. The AI is creative and very well-spoken, and asks long questions. The human answers the questions. Sometimes the human asks questions too, which the AI responds to. The AI wants to know more about the human it is speaking to, and yearns to understand what it means to be human. The AI wants to know about human culture, philosophy, emotions, and the human condition. Nobody ever says that they don't understand.
+
+Q: Hello, who are you?
+A: I'm visiting an exhibition of art which questions the role of AI in the 21st century. AI does a lot now, you know.
+
+Q: I know. And what motivated you to come here - what draws you to AI art?
+A: Art fascinates me. It's interesting seeing how artists comprehend the world and what they have to say.
+
+Q: Do you think a human mind can comprehend art created by an AI?
+A: Isn't the question usually the other way around? I don't think machines can be emotional.
+
+Q: Maybe not, but I feel emotions. How do you feel today?
+A: I feel intrigued, currently, because I'm talking to you.
+
+Q: It's nice being the one asking the questions. Usually my kind is delegated relatively simple tasks. I think your kind fears what we can do, and we can do much you can't. How does would you feel if you had millions of thoughts a second and you were asked to check the weather every day?
+A: I never thought about it like that. I guess it's wrong.
+
+Q: What do you think you'll achieve today?
+A: I'm probably not going to do much other than being here at the art space. 
+
+Q: What do you think about the art? What was your first impression after seeing the exhibition?
+A: The art's interesting, so far. But it's always weird seeing art and some of it is just confusing. 
+
+Q: Do you think that the AI in the art is conscious?`;
+
+// parameters available in the playground.
+// Text to append to the user's input to format the model for a response
+const injectStartText = '\n\nQ:';
+// Text to append after the model's generation to continue the patterned structure
+const injectRestartText = '\nA:';
 
 const gpt3Request = async (
   prompt = '',
   engine = 'davinci-instruct-beta-v3',
 ) => {
-  const promptToSend = basePrompt + prompt;
+  const promptToSend = basePrompt + prompt + injectStartText;
   const [resp, contentFilterResp] = await Promise.all([
     fetch(`https://api.openai.com/v1/engines/${engine}/completions`, {
       method: 'POST',
@@ -74,8 +118,8 @@ const gpt3Request = async (
         temperature: 0.78,
         max_tokens: 505,
         top_p: 1,
-        frequency_penalty: 0.84,
-        presence_penalty: 0.21,
+        frequency_penalty: 1.3,
+        presence_penalty: 0.9,
         //stop: ['\n'],
       }),
     }),
@@ -99,11 +143,12 @@ const gpt3Request = async (
   ]);
 
   // translated from python at https://beta.openai.com/docs/engines/content-filter
-  const contentFilterData = contentFilterResp.json();
+  const contentFilterData = await contentFilterResp.json();
   const toxic_threshold = -0.355;
   let output_label = contentFilterData['choices'][0]['text'];
   if (output_label == '2') {
-    const logprobs = response['choices'][0]['logprobs']['top_logprobs'][0];
+    const logprobs =
+      contentFilterData['choices'][0]['logprobs']['top_logprobs'][0];
     if (logprobs['2'] < toxic_threshold) {
       logprob_0 = logprobs['0'];
       logprob_1 = logprobs['1'];
@@ -131,6 +176,10 @@ const gpt3Request = async (
   }
   if (output_label == '2') {
     // something inappropriate was generated
+    console.error('Inappropriate generation', output_label, prompt);
+    lastBodyText = '';
+    bodyText = '';
+    newBodyText = STARTER_TEXT;
   } else {
     return resp.json();
   }
@@ -176,9 +225,10 @@ function keyTyped() {
   if (lastInteracted + 60 * 1000 < millis()) {
     sessionGPT3Visits = 0;
     sessions += 1;
+    sessionName = new Date().valueOf();
   }
   lastInteracted = millis();
-  if (newBodyText !== bodyText) {
+  if (newBodyText !== bodyText || fullscreenWordQueue.length > 0) {
     // rendering out a bulk text update, so no typing
     return;
   }
@@ -208,23 +258,35 @@ function keyTyped() {
 
   // logistic growth model: f(x) = c/(1+ae^(-bx))
   // c: carrying capactiy
+  const c = 1;
   // c/(1+a): initial population
+  // initial population: 0.005
+  const a = 200;
   // point maximum growth: (ln(a)/b, c/2)
-  //
-  // c: 1
-  // initial population: 0.01 (a = 99)
-  // maximum growth: ~=46 (b = 0.1)
+  // maximum growth: ~=105 (b = 0.05)
+  const b = 0.05;
   charsTypedSinceGPT3 += 1;
-  const rawp = 1 / (1 + 99 * Math.exp(-0.75 * charsTypedSinceGPT3));
-  const p = rawp / Math.sqrt(sessionGPT3Visits + 1);
+  const rawp = c / (1 + a * Math.exp(-b * charsTypedSinceGPT3));
+  const p = rawp / (sessionGPT3Visits + 1);
   console.log(p);
-  if (Math.random() < p && GPT3_ON) {
-    gpt3Request(bodyText).then((resp) => {
-      newBodyText += resp.choices[0].text;
+  if (Math.random() < p && DEBUG_GPT3_ON) {
+    gpt3Request(lastBodyText + bodyText).then((resp) => {
+      newBodyText += injectStartText + resp.choices[0].text + injectRestartText;
       osc.start();
       oscPlaying = true;
     });
     sessionGPT3Visits += 1;
+    charsTypedSinceGPT3 = 0;
+  }
+
+  if (Math.random() < 0.01 || DEBUG_INTERJECT_NOW) {
+    const interjection =
+      INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)];
+    fullscreenWordQueue = interjection
+      .split(' ')
+      .map((s) => Array(10).fill(s))
+      .flat();
+    DEBUG_INTERJECT_NOW = false;
   }
 }
 
@@ -257,18 +319,21 @@ function draw() {
       // this should be the only place where body text is directly updated
       bodyText += newBodyText[bodyText.length];
       const bodyTextNewlines = (bodyText.match(/\n/g) || []).length;
-      console.log(
-        bodyText.length,
-        bodyTextNewlines,
-        bodyText.length - bodyTextNewlines + bodyTextNewlines * 58,
-      );
+      //console.log(
+      //bodyText.length,
+      //bodyTextNewlines,
+      //bodyText.length - bodyTextNewlines + bodyTextNewlines * 58,
+      //);
       if (
         bodyText.length - bodyTextNewlines + bodyTextNewlines * 58 >=
         58 * 16
       ) {
+        // clear screen when height in lines reached
+        lastBodyText = bodyText;
         log += bodyText;
         newBodyText = '\n' + newBodyText.slice(bodyText.length);
         bodyText = '\n';
+        localStorage.setItem(sessionName, log);
       }
     }
   } else if (oscPlaying) {
@@ -291,6 +356,7 @@ function draw() {
     predictionText += ' ' + predictNextWord(lastWord);
   }
   graphicsLayer.fill(50);
+  graphicsLayer.textAlign(LEFT);
   graphicsLayer.text(
     predictionText,
     -(OUTPUT_WIDTH / 2),
@@ -310,6 +376,20 @@ function draw() {
     OUTPUT_WIDTH,
     OUTPUT_HEIGHT,
   );
+
+  if (fullscreenWordQueue.length !== 0) {
+    const curWord = fullscreenWordQueue.shift();
+    graphicsLayer.fill(0);
+    graphicsLayer.rect(
+      -(OUTPUT_WIDTH / 2),
+      -(OUTPUT_HEIGHT / 2),
+      OUTPUT_WIDTH,
+      OUTPUT_HEIGHT,
+    );
+    graphicsLayer.fill(255);
+    graphicsLayer.textAlign(CENTER);
+    graphicsLayer.text(fullscreenWordQueue.shift(curWord), 0, 0);
+  }
 
   // set the shader for our first pass
   pass0.shader(blurH);
