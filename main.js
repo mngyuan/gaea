@@ -108,17 +108,18 @@ const injectRestartText = '\nA:';
 
 const gpt3Request = async (
   prompt = '',
-  engine = 'davinci-instruct-beta-v3',
+  model = 'davinci-instruct-beta-v3',
 ) => {
   const promptToSend = basePrompt + prompt + injectStartText;
   const [resp, contentFilterResp] = await Promise.all([
-    fetch(`https://api.openai.com/v1/engines/${engine}/completions`, {
+    fetch(`https://api.openai.com/v1/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
+        model,
         prompt: promptToSend,
         temperature: 0.78,
         max_tokens: 505,
