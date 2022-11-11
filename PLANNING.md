@@ -15,8 +15,18 @@
 # 12/7 TODO
 
 [ ] overscan settings for raspberry pi
-[ ] figure out proper resolution for raspberry pi
-[ ] disable spacebar to scroll
-[ ] figure out full screen on raspberry pi
+[x] figure out proper resolution for raspberry pi
+[x] disable spacebar to scroll
+[x] figure out full screen on raspberry pi
 
 [ ] enable clearing and outputting new screen
+
+# 11/11 TODO
+
+[ ] add deletion
+[x] make enter force a response
+[x] add back interjections - make a sound?
+[ ] add user id to sessions (based on time?)
+[ ] tweak interrupts a bit less
+[ ] properly save sessions with human readable date
+[ ] turn off display sleep

@@ -3,7 +3,7 @@ const OUTPUT_WIDTH = 712,
 // 712x500 makes a 58x16 display for text at textSize 24 with akkurat mono
 const DEBUG_GPT3_ON = true;
 let DEBUG_INTERJECT_NOW = false;
-const DEBUG_INTERJECT_ENABLE = false;
+const DEBUG_INTERJECT_ENABLE = true;
 
 let akkuratFont, thresholdShader, blurH, blurV, graphicsLayer;
 // we need two createGraphics layers for our blur algorithm
@@ -28,7 +28,7 @@ let osc,
   oscPlaying = false;
 let lastInteracted = 0;
 let sessions = 0,
-  sessionName = new Date().valueOf();
+  sessionName = `${sessions} | ${new Date().toString()}`;
 let charsTypedSinceGPT3 = 0;
 let sessionGPT3Visits = 0;
 let fullscreenWordQueue = [];
@@ -106,10 +106,7 @@ const injectStartText = '\n\nQ:';
 // Text to append after the model's generation to continue the patterned structure
 const injectRestartText = '\nA:';
 
-const gpt3Request = async (
-  prompt = '',
-  model = 'davinci-instruct-beta-v3',
-) => {
+const gpt3Request = async (prompt = '', model = 'davinci-instruct-beta-v3') => {
   const promptToSend = basePrompt + prompt + injectStartText;
   const [resp, contentFilterResp] = await Promise.all([
     fetch(`https://api.openai.com/v1/completions`, {
@@ -127,6 +124,7 @@ const gpt3Request = async (
         frequency_penalty: 1.3,
         presence_penalty: 0.9,
         //stop: ['\n'],
+        user: sessionName,
       }),
     }),
     fetch(
@@ -248,9 +246,14 @@ function setup() {
 
 function keyTyped() {
   if (lastInteracted + 60 * 1000 < millis()) {
+    // store last session
+    log += bodyText;
+    log += `[SESSION END ${new Date().toString()}]`;
+    localStorage.setItem(sessionName, log);
+    // erase session
     sessionGPT3Visits = 0;
     sessions += 1;
-    sessionName = new Date().valueOf();
+    sessionName = `${sessions} | ${new Date().toString()}`;
   }
   lastInteracted = millis();
   if (newBodyText !== bodyText || fullscreenWordQueue.length > 0) {
@@ -278,14 +281,11 @@ function keyTyped() {
     newBodyText += '\n';
     osc.start();
     oscPlaying = true;
-    if (lastKey === 'Enter') {
-      gpt3Request(lastBodyText + bodyText).then((resp) => {
-        newBodyText +=
-          injectStartText + resp.choices[0].text + injectRestartText;
-        osc.start();
-        oscPlaying = true;
-      });
-    }
+    gpt3Request(lastBodyText + bodyText).then((resp) => {
+      newBodyText += injectStartText + resp.choices[0].text + injectRestartText;
+      osc.start();
+      oscPlaying = true;
+    });
   }
   lastKey = key;
   //newBodyText = bodyText;
@@ -312,7 +312,10 @@ function keyTyped() {
     charsTypedSinceGPT3 = 0;
   }
 
-  if ((Math.random() < 0.01 && DEBUG_INTERJECT_ENABLE) || DEBUG_INTERJECT_NOW) {
+  if (
+    (Math.random() < 0.0025 && DEBUG_INTERJECT_ENABLE) ||
+    DEBUG_INTERJECT_NOW
+  ) {
     const interjection =
       INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)];
     fullscreenWordQueue = interjection
@@ -320,6 +323,12 @@ function keyTyped() {
       .map((s) => Array(10).fill(s))
       .flat();
     DEBUG_INTERJECT_NOW = false;
+  }
+}
+
+function keyPressed() {
+  if (keyCode === BACKSPACE) {
+    console.log('backspace');
   }
 }
 
@@ -427,6 +436,11 @@ function draw() {
     graphicsLayer.fill(255);
     graphicsLayer.textAlign(CENTER);
     graphicsLayer.text(fullscreenWordQueue.shift(curWord), 0, 0);
+
+    // provide some audio feedback that interrupt has occurred
+    osc.freq(440);
+    osc.start();
+    oscPlaying = true;
   }
 
   // set the shader for our first pass
