@@ -30,3 +30,21 @@
 [ ] tweak interrupts a bit less
 [ ] properly save sessions with human readable date
 [ ] turn off display sleep
+[ ] set up the disable hotkeys script
+[ ] hard reset
+
+boot
+open terminal
+open chrome
+run python
+go fullscreen
+load localhost
+disable hotkeys?
+turn off mouse
+open new terminal tab
+git pull
+hard refresh
+
+fix prompt
+screen
+headphones
