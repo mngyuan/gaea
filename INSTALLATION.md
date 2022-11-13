@@ -35,7 +35,7 @@ chmod +x disable_keys.sh
 ./disable_keys.sh
 ```
 
-# Pulling updates
+## Pulling updates
 
 1. Open a new Terminal tab
 1.
@@ -50,8 +50,35 @@ git pull
 - If this doesn't work try Ctrl-F5 (Ctrl-Fn-F5)
 - If this doesn't work press Ctrl-Alt-I to open Developer Tools -> Network -> Disable Cache and refresh normally (Ctrl-R)
 
-# Notes on keyboard
+## Notes on keyboard
 
 On this keyboard, Ctrl is where Capslock normally is and vice versa. The Ctrl key has Ctrl written on it. If you toggle Capslock you'll want to untoggle it.
 
 The start menu key and Option/Alt are swapped on this keyboard, so Alt is the 2nd key from the left on the bottom row, not the 3rd.
+
+# Talking about it
+
+This Statement Is False is an interactive installation where a human user and an AI user conversate. It's intentionally designed to question the highly manicured and subservient role AI plays in our lives. In contrast to the smooth surfaces and LED lights of Google Home and Alexa, This Statement Is False is presented with a console interface, harkening back to early computing and ELIZA, the first artificial intelligence conversational program. Just like Siri and Alexa, ELIZA was subservient to human users, answering questions and designed to serve. The AI in This Statement Is False asks the human user questions, upending this assumption we have on our superiority to digital thought, and interrupts the human user's control on the conversation.
+
+## Talking points
+
+### What problem is the project working on?
+
+As AI becomes ever more part of our lives, and the threat of replacement through automation looms, it's become increasingly clear that we need to examine AI - how we treat it, how we conceptualize it, and how and when it enters our lives.
+
+People tend to overly anthropomorphize it, but AI thought in fact works very differently from human thought. It's based in statistical inference and requires massive amounts of training data and time, and can only complete tasks with human-like competency because its been designed specifically by humans to do human things.
+
+### How does it solve that problem?
+
+AI is becoming ubiquitous, and yet many people have also have yet to encounter AI in an open format, outside of the invisible recommendation algorithms and sorting that services like Spotify and Uber rely on. This Statement Is False provides a conversational space where the human user and AI user can be more equal and open. And by doing so, the hope is that people will, gradually during their conversations, come to appreciate how similar AI is to us, in its ability to talk, think, and feel, and how different AI is from us, in how it achieves those feats.
+
+### Features
+
+- interrupts (impatient, control)
+- full screen interruptions to ask questions
+- thinks much faster (faster beeps)
+- GPT3, text generation model trained on the internet
+
+## Links
+
+[Grad show blurbs](https://2022.rca.ac.uk/students/kevin-lee)
