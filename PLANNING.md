@@ -21,6 +21,12 @@
 
 [ ] enable clearing and outputting new screen
 
+## long term
+
+[ ] disable sleep
+[ ] host on cloud
+[x] set up session saving to local storage
+
 # 11/11 TODO
 
 [ ] add deletion
@@ -33,18 +39,6 @@
 [ ] set up the disable hotkeys script
 [ ] hard reset
 
-boot
-open terminal
-open chrome
-run python
-go fullscreen
-load localhost
-disable hotkeys?
-turn off mouse
-open new terminal tab
-git pull
-hard refresh
-
-fix prompt
-screen
-headphones
+[ ] fix prompt
+[ ] ask for screen
+[ ] ask for headphones
