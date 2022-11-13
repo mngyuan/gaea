@@ -58,7 +58,7 @@ The start menu key and Option/Alt are swapped on this keyboard, so Alt is the 2n
 
 # TALKING ABOUT IT
 
-This Statement Is False is an interactive installation where a human user and an AI user conversate. It's intentionally designed to question the highly manicured and subservient role AI plays in our lives. In contrast to the smooth surfaces and LED lights of Google Home and Alexa, This Statement Is False is presented with a console interface, harkening back to early computing and ELIZA, the first artificial intelligence conversational program. Just like Siri and Alexa, ELIZA was subservient to human users, answering questions and designed to serve. The AI in This Statement Is False asks the human user questions, upending this assumption we have on our superiority to digital thought, and interrupts the human user's control on the conversation.
+THIS STATEMENT IS FALSE is an interactive installation where a human user and an AI user conversate. It's intentionally designed to question the highly manicured and subservient role AI plays in our lives. In contrast to the smooth surfaces and LED lights of Google Home and Alexa, THIS STATEMENT IS FALSE is presented with a console interface, harkening back to early computing and ELIZA, the first artificial intelligence conversational program. Just like Siri and Alexa, ELIZA was subservient to human users, answering questions and designed to serve. The AI in THIS STATEMENT IS FALSE asks the human user questions, upending this assumption we have on our superiority to digital thought, and interrupts the human user's control on the conversation.
 
 ## Talking points
 
@@ -70,7 +70,7 @@ People tend to overly anthropomorphize it, but AI thought in fact works very dif
 
 ### How does it solve that problem?
 
-AI is becoming ubiquitous, and yet many people have also have yet to encounter AI in an open format, outside of the invisible recommendation algorithms and sorting that services like Spotify and Uber rely on. This Statement Is False provides a conversational space where the human user and AI user can be more equal and open. And by doing so, the hope is that people will, gradually during their conversations, come to appreciate how similar AI is to us, in its ability to talk, think, and feel, and how different AI is from us, in how it achieves those feats.
+AI is becoming ubiquitous, and yet many people have also have yet to encounter AI in an open format, outside of the invisible recommendation algorithms and sorting that services like Spotify and Uber rely on. THIS STATEMENT IS FALSE provides a conversational space where the human user and AI user can be more equal and open. And by doing so, the hope is that people will, gradually during their conversations, come to appreciate how similar AI is to us, in its ability to talk, think, and feel, and how different AI is from us, in how it achieves those feats.
 
 ### Features
 
