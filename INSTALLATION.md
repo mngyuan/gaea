@@ -56,7 +56,7 @@ On this keyboard, Ctrl is where Capslock normally is and vice versa. The Ctrl ke
 
 The start menu key and Option/Alt are swapped on this keyboard, so Alt is the 2nd key from the left on the bottom row, not the 3rd.
 
-# Talking about it
+# TALKING ABOUT IT
 
 This Statement Is False is an interactive installation where a human user and an AI user conversate. It's intentionally designed to question the highly manicured and subservient role AI plays in our lives. In contrast to the smooth surfaces and LED lights of Google Home and Alexa, This Statement Is False is presented with a console interface, harkening back to early computing and ELIZA, the first artificial intelligence conversational program. Just like Siri and Alexa, ELIZA was subservient to human users, answering questions and designed to serve. The AI in This Statement Is False asks the human user questions, upending this assumption we have on our superiority to digital thought, and interrupts the human user's control on the conversation.
 
@@ -78,6 +78,12 @@ AI is becoming ubiquitous, and yet many people have also have yet to encounter A
 - full screen interruptions to ask questions
 - thinks much faster (faster beeps)
 - GPT3, text generation model trained on the internet
+- keyboard atop screen (hierarchy, control)
+- retro aesthetic (challenging manicured ai presentation today, priming users for something different)
+
+### Notes
+
+Honestly, the core of this project was to give people access to GPT3. While designing the project and conversating to GPT3 it became clear to me and the curator that talking with GPT3 is an incredible and novel experience, one that at the time was hidden behind a closed beta. So a huge part of this project is just how playful, whimsical, surprisingly witty, creepy, intelligent, and on-topic GPT3 can be. There is something very human on the other end when you talk to it. And that's where the inspiration for a lot of the interaction comes from - communicating to human users that this is not just your average Alexa conversation where you demand something from it without saying please or thank you and expect a response (there's [research that shows kids were becoming accustomed to barking orders at AI](https://www.bbc.co.uk/news/technology-43897516)).
 
 ## Links
 
